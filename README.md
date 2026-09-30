@@ -1,5 +1,9 @@
 # statefile
 
+[![self-check](https://github.com/exodus611/statefile/actions/workflows/statefile.yml/badge.svg)](https://github.com/exodus611/statefile/actions/workflows/statefile.yml)
+[![tests](https://github.com/exodus611/statefile/actions/workflows/tests.yml/badge.svg)](https://github.com/exodus611/statefile/actions/workflows/tests.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Check that your project's AI memory is real — and still fresh.**
 
 Your assistant does not forget. There is nothing to remember from: the chat is the only memory it has, and it dies with the window. The fix is one file in the repository that holds **state**: what runs now, what is in flight, what was already tried and killed.
@@ -130,7 +134,7 @@ Most projects have the first and no second, which is why they feel like they sta
 python3 -m unittest discover -s tests -v
 ```
 
-23 tests, including safety properties that are enforced by the suite itself: `check` modifies nothing, `init` creates only `STATE.md`, the source contains no network code, imports are stdlib only, and every `git` call uses a read-only subcommand. See [SECURITY.md](SECURITY.md) for the full picture and how to verify it in ten minutes.
+23 tests, run on every push against Python 3.9, 3.12 and 3.13 — including safety properties that are enforced by the suite itself: `check` modifies nothing, `init` creates only `STATE.md`, the source contains no network code, imports are stdlib only, and every `git` call uses a read-only subcommand. See [SECURITY.md](SECURITY.md) for the full picture and how to verify it in ten minutes.
 
 ## License
 
