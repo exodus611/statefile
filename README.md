@@ -13,6 +13,8 @@ python3 statefile.py check    # is the memory real, fresh and safe?
 
 No dependencies. Python 3.9+. One file.
 
+**See it catch a real failure:** [exodus611/statefile-demo](https://github.com/exodus611/statefile-demo) is a small project that forgot what it was doing — 47 days of stale state, a leaked placeholder, missing sections, outdated rules. The check fails on `main` and passes on the `fixed` branch, where the whole repair is two files and five minutes.
+
 ---
 
 ## What it checks
