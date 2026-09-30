@@ -1,0 +1,34 @@
+name: statefile check
+description: Check that STATE.md exists, is fresh, has the five sections, holds no secrets — and that instruction files are free of outdated prompting patterns.
+author: exodus611
+branding:
+  icon: archive
+  color: blue
+
+inputs:
+  path:
+    description: Directory to check, relative to the repository root.
+    required: false
+    default: '.'
+  max-age-days:
+    description: How many days the state file may go untouched before it counts as stale. Use 0 to disable.
+    required: false
+    default: '14'
+  strict:
+    description: Treat warnings as failures.
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: statefile check
+      shell: bash
+      run: |
+        set -o pipefail
+        EXTRA=""
+        if [ "${{ inputs.strict }}" = "true" ]; then EXTRA="--strict"; fi
+        python3 "${{ github.action_path }}/statefile.py" check \
+          --path "${{ inputs.path }}" \
+          --max-age-days "${{ inputs.max-age-days }}" \
+          $EXTRA
