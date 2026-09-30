@@ -128,6 +128,8 @@ Most projects have the first and no second, which is why they feel like they sta
 python3 -m unittest discover -s tests -v
 ```
 
+23 tests, including safety properties that are enforced by the suite itself: `check` modifies nothing, `init` creates only `STATE.md`, the source contains no network code, imports are stdlib only, and every `git` call uses a read-only subcommand. See [SECURITY.md](SECURITY.md) for the full picture and how to verify it in ten minutes.
+
 ## License
 
 MIT.

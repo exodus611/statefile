@@ -1,7 +1,9 @@
 """Tests for statefile. Run: python3 -m unittest discover -s tests -v"""
 
+import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -172,3 +174,66 @@ class TestCli(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSafety(unittest.TestCase):
+    """Properties that make the tool safe to run: no writes, no network.
+
+    These are regression tests. If someone later adds a network call or makes
+    `check` modify files, these fail before the change reaches anyone.
+    """
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        with open(os.path.join(self.dir, "STATE.md"), "w", encoding="utf-8") as fh:
+            fh.write(GOOD)
+
+    def _hashes(self):
+        out = {}
+        for root, _dirs, files in os.walk(self.dir):
+            for name in files:
+                full = os.path.join(root, name)
+                with open(full, "rb") as fh:
+                    out[full] = hashlib.sha256(fh.read()).hexdigest()
+        return out
+
+    def test_check_modifies_nothing(self):
+        before = self._hashes()
+        run(["check", "--path", self.dir], self.dir)
+        run(["check", "--path", self.dir, "--json"], self.dir)
+        run(["check", "--path", self.dir, "--strict"], self.dir)
+        self.assertEqual(before, self._hashes())
+
+    def test_init_creates_only_the_state_file(self):
+        empty = tempfile.mkdtemp()
+        run(["init", "--path", empty], empty)
+        self.assertEqual(os.listdir(empty), ["STATE.md"])
+
+    def test_source_makes_no_network_calls(self):
+        with open(TOOL, encoding="utf-8") as fh:
+            source = fh.read()
+        # the single "http" occurrence is a string used to skip URLs while scanning
+        for bad in ("urllib", "requests", "socket", "urlopen", "http.client", "webbrowser"):
+            self.assertNotIn(bad, source, f"{bad} must not appear in the tool")
+
+    def test_source_imports_stdlib_only(self):
+        with open(TOOL, encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+        imports = [l.split()[1] for l in lines if l.startswith("import ")]
+        self.assertEqual(sorted(imports), sorted(["argparse", "json", "os", "re", "subprocess", "sys", "time"]))
+
+    def test_git_commands_are_read_only(self):
+        """Every git call must use a read-only subcommand.
+
+        Allowed: rev-parse, log, status. Anything that can change a repository
+        (push, commit, checkout, reset, clean, merge, rebase, fetch, pull, tag)
+        must never appear as a git subcommand in this tool.
+        """
+        with open(TOOL, encoding="utf-8") as fh:
+            source = fh.read()
+        subcommands = re.findall(r'run\(\[\s*"git"\s*,\s*"([a-z-]+)"', source)
+        self.assertTrue(subcommands, "expected to find git calls in the source")
+        for sub in subcommands:
+            self.assertIn(sub, {"rev-parse", "log", "status"}, f"git {sub} is not read-only")
+        for forbidden in ("push", "commit", "checkout", "reset", "clean", "merge", "rebase", "fetch", "pull", "tag"):
+            self.assertNotIn(f'"git", "{forbidden}"', source, f"git {forbidden} must not be used")
