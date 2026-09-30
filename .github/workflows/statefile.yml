@@ -11,6 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check the project state file
-        uses: exodus611/statefile@main
+        uses: exodus611/statefile@v0.1.0
         with:
           max-age-days: '30'

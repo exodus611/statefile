@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: exodus611/statefile@main
+      - uses: exodus611/statefile@v0.1.0
         with:
           max-age-days: '14'
 ```
