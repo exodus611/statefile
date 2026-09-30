@@ -1,5 +1,5 @@
 name: statefile check
-description: Check that STATE.md exists, is fresh, has the five sections, holds no secrets — and that instruction files are free of outdated prompting patterns.
+description: Check that your project's AI memory is real: fresh state file, no secrets, clean instruction rules.
 author: exodus611
 branding:
   icon: archive
