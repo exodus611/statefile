@@ -29,7 +29,7 @@ import subprocess
 import sys
 import time
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 
 # Existing projects keep the original STATE.md convention. NOTES.md is also
 # discovered for book/starter-kit projects; --state-file is the unambiguous

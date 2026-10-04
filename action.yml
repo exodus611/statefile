@@ -1,5 +1,5 @@
 name: statefile check
-description: Check that your project's AI memory is real: fresh state file, no secrets, clean instruction rules.
+description: "Check that your project's AI memory is real: fresh state file, no secrets, clean instruction rules."
 author: exodus611
 branding:
   icon: archive

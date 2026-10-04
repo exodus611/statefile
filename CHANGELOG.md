@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2 — 2026-10-04
+
+**Fixed**
+
+- quote the action description so GitHub's action-manifest parser accepts the colon in the text
+- verify the composite action in the repository's self-check workflow
+
 ## 0.2.1 — 2026-10-04
 
 **Security**
