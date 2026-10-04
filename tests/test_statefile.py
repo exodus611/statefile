@@ -34,6 +34,32 @@ GOOD = """# State
 3. c
 """
 
+GOOD_NOTES = """# Project Notes
+
+## Goal and definition of done
+- ship a working project
+
+## Current state — last verified 2026-10-04
+- the daily job runs
+
+## Repository map
+- source is in src/
+
+## Decisions made
+- keep project memory with the project
+
+## Failed approaches — do not repeat
+- cron in the web app
+
+## Known problems
+- price source move is blocked on vendor choice
+
+## Next three tasks
+1. a
+2. b
+3. c
+"""
+
 
 def run(args, cwd):
     return subprocess.run(
@@ -66,6 +92,33 @@ class TestCheck(unittest.TestCase):
         out, data = self.as_json()
         self.assertEqual(data["findings"], [])
         self.assertEqual(out.returncode, 0)
+
+    def test_notes_file_is_auto_detected(self):
+        self.write("NOTES.md", GOOD_NOTES)
+        out, data = self.as_json()
+        self.assertEqual(out.returncode, 0)
+        self.assertEqual(data["state_file"], "NOTES.md")
+        self.assertEqual(data["findings"], [])
+
+    def test_explicit_notes_file_is_checked(self):
+        self.write("STATE.md", GOOD)
+        self.write("NOTES.md", GOOD_NOTES)
+        out, data = self.as_json("--state-file", "NOTES.md")
+        self.assertEqual(out.returncode, 0)
+        self.assertEqual(data["state_file"], "NOTES.md")
+        self.assertEqual(data["requested_state_file"], "NOTES.md")
+
+    def test_explicit_missing_file_does_not_fall_back(self):
+        self.write("STATE.md", GOOD)
+        out, data = self.as_json("--state-file", "NOTES.md")
+        self.assertEqual(out.returncode, 1)
+        self.assertIsNone(data["state_file"])
+        self.assertIn("NOTES.md", data["findings"][0]["message"])
+
+    def test_state_file_path_cannot_escape_project(self):
+        out = run(["check", "--path", self.dir, "--state-file", "../NOTES.md"], self.dir)
+        self.assertEqual(out.returncode, 2)
+        self.assertIn("inside the project", out.stdout)
 
     def test_stale_state_file_fails(self):
         path = self.write("STATE.md", GOOD)
@@ -160,6 +213,23 @@ class TestInit(unittest.TestCase):
         run(["init", "--path", self.dir], self.dir)
         out = run(["check", "--path", self.dir], self.dir)
         self.assertEqual(out.returncode, 0)
+
+    def test_init_can_create_notes_file(self):
+        out = run(["init", "--path", self.dir, "--state-file", "NOTES.md"], self.dir)
+        self.assertEqual(out.returncode, 0)
+        self.assertTrue(os.path.exists(os.path.join(self.dir, "NOTES.md")))
+        self.assertFalse(os.path.exists(os.path.join(self.dir, "STATE.md")))
+        checked = run(["check", "--path", self.dir, "--state-file", "NOTES.md"], self.dir)
+        self.assertEqual(checked.returncode, 0)
+
+    def test_init_rejects_path_outside_project(self):
+        parent = os.path.dirname(self.dir)
+        target = os.path.join(parent, "escaped-NOTES.md")
+        if os.path.exists(target):
+            os.unlink(target)
+        out = run(["init", "--path", self.dir, "--state-file", "../escaped-NOTES.md"], self.dir)
+        self.assertEqual(out.returncode, 2)
+        self.assertFalse(os.path.exists(target))
 
 
 class TestCli(unittest.TestCase):

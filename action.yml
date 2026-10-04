@@ -10,6 +10,10 @@ inputs:
     description: Directory to check, relative to the repository root.
     required: false
     default: '.'
+  state-file:
+    description: Repository-relative memory file to check, for example NOTES.md. Empty means auto-detect STATE.md or NOTES.md.
+    required: false
+    default: ''
   max-age-days:
     description: How many days the state file may go untouched before it counts as stale. Use 0 to disable.
     required: false
@@ -24,11 +28,19 @@ runs:
   steps:
     - name: statefile check
       shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_STATE_FILE: ${{ inputs.state-file }}
+        INPUT_MAX_AGE_DAYS: ${{ inputs.max-age-days }}
+        INPUT_STRICT: ${{ inputs.strict }}
       run: |
         set -o pipefail
-        EXTRA=""
-        if [ "${{ inputs.strict }}" = "true" ]; then EXTRA="--strict"; fi
+        EXTRA=()
+        if [ -n "$INPUT_STATE_FILE" ]; then
+          EXTRA+=(--state-file "$INPUT_STATE_FILE")
+        fi
+        if [ "$INPUT_STRICT" = "true" ]; then EXTRA+=(--strict); fi
         python3 "${{ github.action_path }}/statefile.py" check \
-          --path "${{ inputs.path }}" \
-          --max-age-days "${{ inputs.max-age-days }}" \
-          $EXTRA
+          --path "$INPUT_PATH" \
+          --max-age-days "$INPUT_MAX_AGE_DAYS" \
+          "${EXTRA[@]}"

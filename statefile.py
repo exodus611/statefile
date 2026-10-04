@@ -17,8 +17,8 @@ drifted back into patterns written for older models.
 No dependencies. Python 3.9+.
 
 Usage:
-    python3 statefile.py check [--path .] [--max-age-days 14] [--json] [--strict]
-    python3 statefile.py init  [--path .] [--force]
+    python3 statefile.py check [--path .] [--state-file NOTES.md] [--max-age-days 14] [--json] [--strict]
+    python3 statefile.py init  [--path .] [--state-file NOTES.md] [--force]
 """
 
 import argparse
@@ -29,9 +29,21 @@ import subprocess
 import sys
 import time
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
-STATE_NAMES = ["STATE.md", "state.md", "docs/STATE.md", ".ai/STATE.md"]
+# Existing projects keep the original STATE.md convention. NOTES.md is also
+# discovered for book/starter-kit projects; --state-file is the unambiguous
+# choice when a repository contains more than one candidate.
+STATE_NAMES = [
+    "STATE.md",
+    "state.md",
+    "NOTES.md",
+    "notes.md",
+    "docs/STATE.md",
+    "docs/NOTES.md",
+    ".ai/STATE.md",
+    ".ai/NOTES.md",
+]
 
 INSTRUCTION_NAMES = [
     "CLAUDE.md",
@@ -48,7 +60,14 @@ INSTRUCTION_NAMES = [
 # Each entry: canonical name -> list of regexes matched against headings.
 SECTIONS = {
     "now": [r"\bnow\b", r"\bruns?\b", r"\bcurrent\b", r"\bstatus\b", r"\bworking\b"],
-    "in flight": [r"in[\s-]?flight", r"\bprogress\b", r"\bblocked\b", r"\bwip\b", r"\bpending\b"],
+    "in flight": [
+        r"in[\s-]?flight",
+        r"\bprogress\b",
+        r"\bblocked\b",
+        r"\bwip\b",
+        r"\bpending\b",
+        r"\bknown problems?\b",
+    ],
     "decisions": [r"\bdecisions?\b", r"\bchoices?\b", r"\bwhy\b"],
     "dead ends": [r"dead[\s-]?ends?", r"\bfailed\b", r"\bdo not repeat\b", r"\bdont repeat\b", r"\btried\b", r"\bruled out\b"],
     "next": [r"\bnext\b", r"\btodo\b", r"\btasks?\b", r"\bfollow[\s-]?ups?\b"],
@@ -104,7 +123,32 @@ def last_touch_days(path, rel_path):
     return None
 
 
-def find_state_file(path):
+def normalize_state_file(path, name):
+    """Return a safe repository-relative memory-file path.
+
+    The explicit filename may come from a GitHub Action input, so absolute paths,
+    traversal, and symlinks escaping the project are rejected before any read or
+    write occurs.
+    """
+    if not name:
+        return None
+    candidate = os.path.normpath(name.replace("\\", "/"))
+    if os.path.isabs(candidate) or candidate in ("", ".", "..") or candidate.startswith("../"):
+        raise ValueError("state file must be a path inside the project")
+    root = os.path.realpath(path)
+    full = os.path.realpath(os.path.join(root, candidate))
+    try:
+        inside = os.path.commonpath([root, full]) == root
+    except ValueError:
+        inside = False
+    if not inside:
+        raise ValueError("state file must be a path inside the project")
+    return candidate.replace(os.sep, "/")
+
+
+def find_state_file(path, requested=None):
+    if requested:
+        return requested if os.path.isfile(os.path.join(path, requested)) else None
     for name in STATE_NAMES:
         full = os.path.join(path, name)
         if os.path.isfile(full):
@@ -191,17 +235,18 @@ def scan_rules(path):
     return hits
 
 
-def check(path, max_age_days):
+def check(path, max_age_days, state_file=None):
     findings = []
-    state_rel = find_state_file(path)
+    state_rel = find_state_file(path, state_file)
+    expected = state_file or "STATE.md or NOTES.md"
 
     if not state_rel:
         findings.append(
             {
                 "level": "fail",
                 "code": "STATE_MISSING",
-                "message": "No STATE.md in this repository.",
-                "fix": "Run: python3 statefile.py init  (then edit the file)",
+                "message": f"No {expected} in this repository.",
+                "fix": "Run statefile init with the same --state-file value, then edit the file.",
             }
         )
         state_text = ""
@@ -213,7 +258,7 @@ def check(path, max_age_days):
                 {
                     "level": "warn",
                     "code": "STATE_SECTIONS",
-                    "message": "STATE.md is missing sections: " + ", ".join(missing),
+                    "message": f"{state_rel} is missing sections: " + ", ".join(missing),
                     "fix": "Add the missing headings, even as placeholders.",
                 }
             )
@@ -223,7 +268,7 @@ def check(path, max_age_days):
                 {
                     "level": "fail",
                     "code": "STATE_STALE",
-                    "message": f"STATE.md has not changed in {days:.0f} days (limit {max_age_days}).",
+                    "message": f"{state_rel} has not changed in {days:.0f} days (limit {max_age_days}).",
                     "fix": "Update it before the next session, or raise --max-age-days.",
                 }
             )
@@ -251,6 +296,7 @@ def check(path, max_age_days):
         "version": VERSION,
         "path": os.path.abspath(path),
         "state_file": state_rel,
+        "requested_state_file": state_file,
         "max_age_days": max_age_days,
         "findings": findings,
         "failed": any(f["level"] == "fail" for f in findings),
@@ -306,10 +352,15 @@ STATE_TEMPLATE = """# State
 """
 
 
-def cmd_init(path, force):
-    target = os.path.join(path, "STATE.md")
+def cmd_init(path, force, state_file=None):
+    rel = state_file or "STATE.md"
+    target = os.path.join(path, rel)
+    parent = os.path.dirname(target)
+    if parent and not os.path.isdir(parent):
+        print(f"parent directory does not exist: {parent}")
+        return 2
     if os.path.exists(target) and not force:
-        print(f"STATE.md already exists in {path} — use --force to overwrite.")
+        print(f"{rel} already exists in {path} — use --force to overwrite.")
         return 1
     body = STATE_TEMPLATE
     if is_git_repo(path):
@@ -345,25 +396,32 @@ def main(argv=None):
 
     c = sub.add_parser("check", help="check the state file and instruction files")
     c.add_argument("--path", default=".")
+    c.add_argument("--state-file", help="repository-relative memory file, for example NOTES.md")
     c.add_argument("--max-age-days", type=int, default=14)
     c.add_argument("--json", action="store_true")
     c.add_argument("--strict", action="store_true", help="treat warnings as failures")
 
-    i = sub.add_parser("init", help="create a STATE.md draft")
+    i = sub.add_parser("init", help="create a state-file draft")
     i.add_argument("--path", default=".")
+    i.add_argument("--state-file", help="repository-relative memory file, for example NOTES.md")
     i.add_argument("--force", action="store_true")
 
     args = parser.parse_args(argv)
-    if args.command == "init":
-        return cmd_init(args.path, args.force)
     if args.command is None:
         parser.print_help()
         return 0
     if not os.path.isdir(args.path):
         print(f"not a directory: {args.path}")
         return 2
+    try:
+        state_file = normalize_state_file(args.path, args.state_file)
+    except ValueError as exc:
+        print(f"invalid --state-file: {exc}")
+        return 2
+    if args.command == "init":
+        return cmd_init(args.path, args.force, state_file)
 
-    result = check(args.path, args.max_age_days)
+    result = check(args.path, args.max_age_days, state_file)
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:

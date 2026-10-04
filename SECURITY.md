@@ -4,9 +4,9 @@
 
 ## What it reads
 
-Only these filenames, and only inside the directory you pass with `--path`:
+Only the selected memory file and known instruction files, and only inside the directory you pass with `--path`:
 
-- `STATE.md` (or `state.md`, `docs/STATE.md`, `.ai/STATE.md`)
+- the explicit `--state-file` path, or an auto-detected `STATE.md` / `NOTES.md` location
 - `CLAUDE.md`, `AGENTS.md`, `agent.md`, `GEMINI.md`, `instructions.md`
 - `.cursorrules`, `.cursor/rules`, `.github/copilot-instructions.md`
 
@@ -17,7 +17,7 @@ It does not walk your repository, does not read source code, and does not look a
 | Command | Writes |
 |---|---|
 | `statefile.py check` | **Nothing.** Verified by test — file hashes are identical before and after. |
-| `statefile.py init` | Creates `STATE.md` only. Refuses to overwrite an existing file unless you pass `--force`. |
+| `statefile.py init` | Creates only the selected memory file (`STATE.md` by default). Refuses to overwrite an existing file unless you pass `--force`. |
 
 ## Network
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0 — 2026-10-04
+
+**Added**
+
+- `--state-file FILE` for `check` and `init`, so projects can explicitly use `NOTES.md`, `STATE.md`, or another repository-relative memory file
+- GitHub Action input `state-file`
+- automatic discovery of common `NOTES.md` locations when no explicit file is supplied
+- path-safety checks that reject absolute paths, traversal, and symlinks escaping the project
+- tests for explicit selection, auto-detection, missing-file behavior, initialization, and path safety
+
+**Compatibility**
+
+- existing `STATE.md` projects and workflows continue to work without changes
+- `STATE.md` remains first in auto-detection order; use `state-file: NOTES.md` when both files exist
+
 ## 0.1.0 — 2026-09-30
 
 First release.

@@ -6,14 +6,16 @@
 
 **Check that your project's AI memory is real — and still fresh.**
 
-Your assistant does not forget. There is nothing to remember from: the chat is the only memory it has, and it dies with the window. The fix is one file in the repository that holds **state**: what runs now, what is in flight, what was already tried and killed.
+A project that continues across AI sessions needs one human-readable file in the repository that holds **state**: what runs now, what is in flight, what was already tried and killed. Call it `STATE.md`, `NOTES.md`, or choose an explicit repository-relative path.
 
 That file rots quietly. It gets stale, it loses sections, secrets creep into it, and instruction files drift back into patterns written for older models. `statefile` catches all of that — locally in one command, or in CI on every push.
 
 ```bash
-python3 statefile.py init     # create a STATE.md draft from your git history
-python3 statefile.py check    # is the memory real, fresh and safe?
+python3 statefile.py init --state-file NOTES.md
+python3 statefile.py check --state-file NOTES.md
 ```
+
+Existing `STATE.md` projects remain compatible: omit `--state-file` and the tool auto-detects `STATE.md` or `NOTES.md`.
 
 No dependencies. Python 3.9+. One file.
 
@@ -49,14 +51,14 @@ result: failed
 ```bash
 git clone https://github.com/exodus611/statefile
 cd statefile
-python3 statefile.py init --path /path/to/your/project
-python3 statefile.py check --path /path/to/your/project
+python3 statefile.py init --path /path/to/your/project --state-file NOTES.md
+python3 statefile.py check --path /path/to/your/project --state-file NOTES.md
 ```
 
 Then paste this into your project's instruction file (`CLAUDE.md`, `AGENTS.md`, whatever your tool reads):
 
 ```
-Before starting work, read STATE.md. Before the session ends, update it:
+Before starting work, read NOTES.md. Before the session ends, update it:
 what runs now, what is in flight, the decisions with reasons, dead ends,
 and the next three tasks.
 ```
@@ -67,6 +69,7 @@ That is the whole method. The checker only makes sure you did not quietly stop.
 
 ```bash
 --path DIR          what to check (default: current directory)
+--state-file FILE   explicit memory file, for example NOTES.md
 --max-age-days N    how old the state file may be (default: 14; 0 disables the check)
 --strict            warnings fail the run too
 --json              machine-readable output for CI
@@ -88,8 +91,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: exodus611/statefile@v0.1.0
+      - uses: exodus611/statefile@v0.2.0
         with:
+          state-file: NOTES.md
           max-age-days: '14'
 ```
 
@@ -97,7 +101,7 @@ If you prefer zero Actions, run the script directly:
 
 ```bash
 curl -sO https://raw.githubusercontent.com/exodus611/statefile/main/statefile.py
-python3 statefile.py check
+python3 statefile.py check --state-file NOTES.md
 ```
 
 ### Badge
@@ -117,7 +121,7 @@ There are excellent tools for reviewing code, auditing release artefacts and lin
 Rules and state are different:
 
 - **Rules** — how to work here. Change rarely. Live in `CLAUDE.md` / `AGENTS.md`.
-- **State** — what is true this week. Changes every session. Lives in `STATE.md`.
+- **State** — what is true this week. Changes every session. Lives in the selected memory file, commonly `STATE.md` or `NOTES.md`.
 
 Most projects have the first and no second, which is why they feel like they start over every morning.
 
@@ -134,7 +138,7 @@ Most projects have the first and no second, which is why they feel like they sta
 python3 -m unittest discover -s tests -v
 ```
 
-23 tests, run on every push against Python 3.9, 3.12 and 3.13 — including safety properties that are enforced by the suite itself: `check` modifies nothing, `init` creates only `STATE.md`, the source contains no network code, imports are stdlib only, and every `git` call uses a read-only subcommand. See [SECURITY.md](SECURITY.md) for the full picture and how to verify it in ten minutes.
+29 tests, run on every push against Python 3.9, 3.12 and 3.13 — including safety properties that are enforced by the suite itself: `check` modifies nothing, `init` creates only the selected memory file, unsafe paths are rejected, the source contains no network code, imports are stdlib only, and every `git` call uses a read-only subcommand. See [SECURITY.md](SECURITY.md) for the full picture and how to verify it in ten minutes.
 
 ## License
 
