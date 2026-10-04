@@ -12,7 +12,7 @@ Maintain a small, dependency-free project-memory checker that can run locally an
 - Version `v0.2.3` is published at commit `8e9dc90f98ee181b885fec72ce7f771b66d60057`.
 - 30 unit tests pass locally.
 - `.github/workflows/tests.yml` runs tests on Python 3.9, 3.12, and 3.13.
-- `.github/workflows/statefile.yml` runs this repository's local composite action on `STATE.md`; this reviewed update enables strict mode and least-privilege read access. The first external result for the change still requires confirmation after push.
+- `.github/workflows/statefile.yml` runs this repository's local composite action on `STATE.md` with strict mode and least-privilege read access. On commit `67378b0851f33f0b0f0333a916cc1f534daf8783`, strict self-check run `37229520941` and test run `37229520866` completed successfully.
 - The checker detects freshness, required structural signals, obvious secret shapes, and recognized instruction-rule patterns. It does not prove that state claims are factually true.
 
 ## Repository map
@@ -45,10 +45,10 @@ Maintain a small, dependency-free project-memory checker that can run locally an
 
 ## Next three tasks
 
-1. Confirm both public workflows are green on the resulting commit.
-2. Keep release documentation and this state file aligned with published tags.
+1. Keep release documentation and this state file aligned with published tags.
+2. Monitor the strict self-check for real repository instruction changes rather than weakening it for green CI.
 3. Consider a pre-commit integration only if a real user need and maintenance plan are established.
 
 ## Recent sessions
 
-- 2026-10-04 — Audited the repository against the complete Reader Kit. Confirmed 30 passing tests and release `v0.2.3`; found that the old state text still described a pending `v0.1.0` and that strict mode was not enabled in the self-check workflow.
+- 2026-10-04 — Installed concise repository instructions, corrected the obsolete pending-`v0.1.0` state to published `v0.2.3`, and enabled strict self-checking with read-only permissions. All 30 local tests and both public workflows passed on commit `67378b0`.
