@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3 — 2026-10-04
+
+**Added**
+
+- scan `PROTOCOL.md` and `docs/PROTOCOL.md` alongside recognized agent-instruction files
+- regression coverage confirming protocol files receive rule-antipattern checks
+
 ## 0.2.2 — 2026-10-04
 
 **Fixed**

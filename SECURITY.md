@@ -7,7 +7,7 @@
 Only the selected memory file and known instruction files, and only inside the directory you pass with `--path`:
 
 - the explicit `--state-file` path, or an auto-detected `STATE.md` / `NOTES.md` location
-- `CLAUDE.md`, `AGENTS.md`, `agent.md`, `GEMINI.md`, `instructions.md`
+- `CLAUDE.md`, `AGENTS.md`, `agent.md`, `GEMINI.md`, `instructions.md`, `PROTOCOL.md`, `docs/PROTOCOL.md`
 - `.cursorrules`, `.cursor/rules`, `.github/copilot-instructions.md`
 
 It does not walk your repository, does not read source code, and does not look at any other files.

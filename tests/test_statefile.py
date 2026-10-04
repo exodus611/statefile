@@ -178,6 +178,12 @@ class TestCheck(unittest.TestCase):
         self.assertEqual(codes.count("RULE_ANTIPATTERN"), 2)
         self.assertEqual(out.returncode, 0)
 
+    def test_protocol_file_is_scanned(self):
+        self.write("STATE.md", GOOD)
+        self.write("PROTOCOL.md", "# Protocol\n\nAlways double-check your work.\n")
+        out, data = self.as_json()
+        self.assertIn("RULE_ANTIPATTERN", [f["code"] for f in data["findings"]])
+
     def test_allcaps_emphasis_warns(self):
         self.write("STATE.md", GOOD)
         self.write("AGENTS.md", "YOU MUST ALWAYS VERIFY EVERYTHING\n")

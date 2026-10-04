@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: exodus611/statefile@v0.2.2
+      - uses: exodus611/statefile@v0.2.3
         with:
           state-file: NOTES.md
           max-age-days: '14'
@@ -138,7 +138,7 @@ Most projects have the first and no second, which is why they feel like they sta
 python3 -m unittest discover -s tests -v
 ```
 
-29 tests, run on every push against Python 3.9, 3.12 and 3.13 — including safety properties that are enforced by the suite itself: `check` modifies nothing, `init` creates only the selected memory file, unsafe paths are rejected, the source contains no network code, imports are stdlib only, and every `git` call uses a read-only subcommand. See [SECURITY.md](SECURITY.md) for the full picture and how to verify it in ten minutes.
+30 tests, run on every push against Python 3.9, 3.12 and 3.13 — including safety properties that are enforced by the suite itself: `check` modifies nothing, `init` creates only the selected memory file, unsafe paths are rejected, the source contains no network code, imports are stdlib only, and every `git` call uses a read-only subcommand. See [SECURITY.md](SECURITY.md) for the full picture and how to verify it in ten minutes.
 
 ## License
 

@@ -29,7 +29,7 @@ import subprocess
 import sys
 import time
 
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 
 # Existing projects keep the original STATE.md convention. NOTES.md is also
 # discovered for book/starter-kit projects; --state-file is the unambiguous
@@ -54,6 +54,8 @@ INSTRUCTION_NAMES = [
     ".cursor/rules",
     ".github/copilot-instructions.md",
     "instructions.md",
+    "PROTOCOL.md",
+    "docs/PROTOCOL.md",
 ]
 
 # The five sections that make a state file worth reading.
