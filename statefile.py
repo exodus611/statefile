@@ -29,7 +29,7 @@ import subprocess
 import sys
 import time
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 # Existing projects keep the original STATE.md convention. NOTES.md is also
 # discovered for book/starter-kit projects; --state-file is the unambiguous
@@ -188,7 +188,9 @@ def scan_secrets(text):
             continue
         for pattern, label in SECRET_PATTERNS:
             if re.search(pattern, line):
-                hits.append({"line": lineno, "kind": label, "excerpt": line.strip()[:80]})
+                # Never echo the matching line: CI logs and JSON reports must not
+                # become a second copy of the secret we are warning about.
+                hits.append({"line": lineno, "kind": label})
                 break
     return hits
 
@@ -277,7 +279,7 @@ def check(path, max_age_days, state_file=None):
                 {
                     "level": "fail",
                     "code": "SECRET_IN_STATE",
-                    "message": f"{hit['kind']} at {state_rel}:{hit['line']} — {hit['excerpt']}",
+                    "message": f"{hit['kind']} at {state_rel}:{hit['line']} — value redacted",
                     "fix": "Remove it and rotate the value. Never keep secrets in a state file.",
                 }
             )

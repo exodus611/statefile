@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 — 2026-10-04
+
+**Security**
+
+- redact matched secret values from human-readable and JSON findings so CI logs do not create another copy of a detected credential
+- add a regression test covering both output formats
+
 ## 0.2.0 — 2026-10-04
 
 **Added**

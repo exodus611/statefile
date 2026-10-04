@@ -148,11 +148,16 @@ class TestCheck(unittest.TestCase):
         out = run(["check", "--path", self.dir, "--strict"], self.dir)
         self.assertEqual(out.returncode, 1)
 
-    def test_secret_in_state_file_fails(self):
-        self.write("STATE.md", GOOD + "\ntoken: ghp_" + "a" * 30 + "\n")
+    def test_secret_in_state_file_fails_without_echoing_value(self):
+        secret = "ghp_" + "a" * 30
+        self.write("STATE.md", GOOD + f"\ntoken: {secret}\n")
         out, data = self.as_json()
         self.assertEqual(out.returncode, 1)
         self.assertIn("SECRET_IN_STATE", [f["code"] for f in data["findings"]])
+        self.assertNotIn(secret, out.stdout)
+        human = run(["check", "--path", self.dir], self.dir)
+        self.assertNotIn(secret, human.stdout)
+        self.assertIn("value redacted", human.stdout)
 
     def test_placeholder_template_fails(self):
         self.write("STATE.md", GOOD + "\ndeploy: {{ secrets.OPENAI_API_KEY }}\n")
